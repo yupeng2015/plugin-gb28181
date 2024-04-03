@@ -55,7 +55,7 @@ func (a *Authorization) getDigest(raw string) string {
 func (c *GB28181Config) OnRegister(req sip.Request, tx sip.ServerTransaction) {
 	from, ok := req.From()
 	if !ok || from.Address == nil || from.Address.User() == nil {
-		GB28181Plugin.Error("OnMessage", zap.String("error", "no id"))
+		GB28181Plugin.Error("OnRegister", zap.String("error", "no id"))
 		return
 	}
 	id := from.Address.User().String()

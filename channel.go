@@ -193,7 +193,7 @@ func (channel *Channel) CreateRequst(Method sip.RequestMethod) (req sip.Request)
 	}
 	//非同一域的目标地址需要使用@host
 	host := conf.Realm
-	if channel.DeviceID[0:9] != host {
+	if channel.DeviceID[0:10] != host {
 		if channel.Port != 0 {
 			deviceIp := d.NetAddr
 			deviceIp = deviceIp[0:strings.LastIndex(deviceIp, ":")]
