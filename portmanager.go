@@ -1,7 +1,9 @@
 package gb28181
 
-import "io"
-
+import (
+	"errors"
+)
+var ErrNoAvailablePorts = errors.New("no available ports")
 type PortManager struct {
 	recycle chan uint16
 	max     uint16
@@ -27,7 +29,7 @@ func (pm *PortManager) Recycle(p uint16) (err error) {
 	case pm.recycle <- p:
 		return nil
 	default:
-		return io.EOF //TODO: 换一个Error
+		return ErrNoAvailablePorts
 	}
 }
 
@@ -41,7 +43,7 @@ func (pm *PortManager) GetPort() (p uint16, err error) {
 			p = pm.pos
 			return
 		} else {
-			return 0, io.EOF //TODO: 换一个Error
+			return 0, ErrNoAvailablePorts
 		}
 	}
 }
