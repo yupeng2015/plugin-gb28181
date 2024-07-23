@@ -468,6 +468,14 @@ func (channel *Channel) Invite(opt *InviteOptions) (code int, err error) {
 				inviteRes: inviteRes,
 			})
 			err = srv.Send(sip.NewAckRequest("", invite, inviteRes, "", nil))
+		} else {
+			if opt.recyclePort != nil {
+				opt.recyclePort(opt.MediaPort)
+			}
+		}
+	} else {
+		if opt.recyclePort != nil {
+			opt.recyclePort(opt.MediaPort)
 		}
 	}
 	return
