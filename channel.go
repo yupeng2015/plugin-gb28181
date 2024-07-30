@@ -371,20 +371,21 @@ func (channel *Channel) Invite(opt *InviteOptions) (code int, err error) {
 	}
 	protocol := ""
 	networkType := "udp"
-	reusePort := true
+
+	// 根据配置文件判断是否多路复用
+	reusePort := conf.Port.Fdm
+
 	if conf.IsMediaNetworkTCP() {
 		networkType = "tcp"
 		protocol = "TCP/"
 		if conf.tcpPorts.Valid {
 			opt.MediaPort, err = conf.tcpPorts.GetPort()
 			opt.recyclePort = conf.tcpPorts.Recycle
-			reusePort = false
 		}
 	} else {
 		if conf.udpPorts.Valid {
 			opt.MediaPort, err = conf.udpPorts.GetPort()
 			opt.recyclePort = conf.udpPorts.Recycle
-			reusePort = false
 		}
 	}
 	if err != nil {
@@ -392,6 +393,8 @@ func (channel *Channel) Invite(opt *InviteOptions) (code int, err error) {
 	}
 	if opt.MediaPort == 0 {
 		opt.MediaPort = conf.MediaPort
+		// 单端口默认多路复用
+		reusePort = true
 	}
 
 	sdpInfo := []string{

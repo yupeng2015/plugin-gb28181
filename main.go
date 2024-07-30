@@ -34,6 +34,7 @@ type GB28181Config struct {
 	Port       struct { // 新配置方式
 		Sip   string `default:"udp:5060" desc:"sip服务端口号"`
 		Media string `default:"tcp:58200-59200" desc:"媒体服务端口号"`
+		Fdm   bool   `default:"false" desc:"多路复用"`
 	}
 	RegisterValidity  time.Duration `default:"3600s" desc:"注册有效期"` //注册有效期，单位秒，默认 3600
 	HeartbeatInterval time.Duration `default:"60s" desc:"心跳间隔"`    //心跳间隔，单位秒，默认 60
