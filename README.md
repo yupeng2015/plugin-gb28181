@@ -33,6 +33,7 @@ gb28181:
   port:
     sip: udp:5060 #sip服务器端口
     media: tcp:58200-59200 #媒体服务器端口，用于接收设备的流
+    fdm: false #端口复用,单端口默认多路复用,多端口多路复用根据这个
 
   removebaninterval: 10m #定时移除注册失败的设备黑名单，单位秒，默认10分钟（600秒）
   loglevel:         info
