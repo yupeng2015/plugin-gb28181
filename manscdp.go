@@ -1,12 +1,23 @@
 package gb28181
 
 import (
+	"encoding/xml"
 	"fmt"
 	"strconv"
 	"time"
 )
 
 var (
+	// 获取预置位列表
+	PresentListXML = `
+<?xml version="1.0"?>
+<Query>
+	<CmdType>PresetQuery</CmdType>
+		<SN>%d</SN>
+	<DeviceID>%s</DeviceID>
+</Query>
+`
+
 	// CatalogXML 获取设备列表xml样式
 	CatalogXML = `<?xml version="1.0"?><Query>
 <CmdType>Catalog</CmdType>
@@ -65,6 +76,10 @@ func BuildCatalogXML(sn int, id string) string {
 	return fmt.Sprintf(CatalogXML, sn, id)
 }
 
+func BuildPresetListXML(sn int, id string) string {
+	return fmt.Sprintf(PresentListXML, sn, id)
+}
+
 // BuildRecordInfoXML 获取录像文件列表指令
 func BuildRecordInfoXML(sn int, id string, start, end int64) string {
 	return fmt.Sprintf(RecordInfoXML, sn, id, intTotime(start).Format("2006-01-02T15:04:05"), intTotime(end).Format("2006-01-02T15:04:05"))
@@ -89,4 +104,14 @@ var (
 // BuildRecordInfoXML 获取录像文件列表指令
 func BuildAlarmResponseXML(id string) string {
 	return fmt.Sprintf(AlarmResponseXML, id)
+}
+
+func XmlEncode(v interface{}) (string, error) {
+	xmlData, err := xml.MarshalIndent(v, "", " ")
+	if err != nil {
+		return "", err
+	}
+	xml := string(xmlData)
+	xml = `<?xml version="1.0" ?>` + "\n" + xml + "\n"
+	return xml, err
 }

@@ -31,6 +31,7 @@ func (p *PullStream) CreateRequest(method sip.RequestMethod) (req sip.Request) {
 	req = p.channel.CreateRequst(method)
 	from, _ := res.From()
 	to, _ := res.To()
+
 	callId, _ := res.CallID()
 	req.ReplaceHeaders(from.Name(), []sip.Header{from})
 	req.ReplaceHeaders(to.Name(), []sip.Header{to})
@@ -118,6 +119,11 @@ type Channel struct {
 	Latitude    string       // 纬度
 	*log.Logger `json:"-" yaml:"-"`
 	ChannelInfo
+}
+
+type PresetInfo struct {
+	PresetID   int    `json:"-" yaml:"-"` //
+	PresetName string `json:"-" yaml:"-"` //
 }
 
 func (c *Channel) MarshalJSON() ([]byte, error) {
@@ -262,6 +268,41 @@ func (channel *Channel) QueryRecord(startTime, endTime string) ([]*Record, error
 	// 所以此处不用再增加超时等保护机制
 	r := <-resultCh
 	return r.list, r.err
+}
+
+func (channel *Channel) QueryPresetList() (sip.Response, error) {
+	d := channel.Device
+	request := d.CreateRequest(sip.MESSAGE)
+	contentType := sip.ContentType("Application/MANSCDP+xml")
+	request.AppendHeader(&contentType)
+
+	body := BuildPresetListXML(100, channel.DeviceID)
+	request.SetBody(body, true)
+
+	resp, err := d.SipRequestForResponse(request)
+	if err != nil {
+		return nil, fmt.Errorf("query error: %s", err)
+	}
+	if resp.StatusCode() != http.StatusOK {
+		return nil, fmt.Errorf("query error, status=%d", resp.StatusCode())
+	}
+	return resp, nil
+}
+
+func (channel *Channel) PresetControl(ptzCode int, point byte) int {
+	cmd := byte(PresetSet)
+	switch ptzCode {
+	case PresetAddPoint:
+		cmd = PresetSet
+	case PresetDelPoint:
+		cmd = PresetDel
+	case PresetCallPoint:
+		cmd = PresetCall
+	default:
+
+	}
+	PTZCmd := Pack(cmd, point)
+	return channel.Control(PTZCmd)
 }
 
 func (channel *Channel) Control(PTZCmd string) int {

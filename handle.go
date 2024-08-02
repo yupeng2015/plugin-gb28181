@@ -274,6 +274,8 @@ func (c *GB28181Config) OnMessage(req sip.Request, tx sip.ServerTransaction) {
 			body = BuildAlarmResponseXML(d.ID)
 		case "Broadcast":
 			GB28181Plugin.Info("broadcast message", zap.String("body", req.Body()))
+		case "PresetQuery":
+			GB28181Plugin.Info("PresetQuery message", zap.String("body", req.Body()))
 		default:
 			d.Warn("Not supported CmdType", zap.String("CmdType", temp.CmdType), zap.String("body", req.Body()))
 			response := sip.NewResponseFromRequest("", req, http.StatusBadRequest, "", "")
