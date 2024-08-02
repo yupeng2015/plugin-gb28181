@@ -230,6 +230,47 @@ func (c *GB28181Config) API_position(w http.ResponseWriter, r *http.Request) {
 	}
 }
 
+func (c *GB28181Config) API_preset_list(w http.ResponseWriter, r *http.Request) {
+	query := r.URL.Query()
+	//设备id
+	id := query.Get("id")
+	//获取通道
+	channel := query.Get("channel")
+	if c := FindChannel(id, channel); c != nil {
+		res, err := c.QueryPresetList()
+		if err == nil {
+			util.ReturnValue(res, w, r)
+		} else {
+			util.ReturnError(util.APIErrorInternal, err.Error(), w, r)
+		}
+	} else {
+		util.ReturnError(util.APIErrorNotFound, fmt.Sprintf("device %q channel %q not found", id, channel), w, r)
+	}
+
+}
+
+func (c *GB28181Config) API_preset_control(w http.ResponseWriter, r *http.Request) {
+	//CORS(w, r)
+	query := r.URL.Query()
+	//设备id
+	id := query.Get("id")
+	//获取通道
+	channel := query.Get("channel")
+	//获取cmd
+	ptzCmd := query.Get("cmd")
+	//获取点
+	point := query.Get("point")
+
+	if c := FindChannel(id, channel); c != nil {
+		_ptzCmd, _ := strconv.ParseInt(ptzCmd, 10, 16)
+		_point, _ := strconv.ParseInt(point, 10, 8)
+		code := c.PresetControl(int(_ptzCmd), byte(_point))
+		util.ReturnError(code, "device received", w, r)
+	} else {
+		util.ReturnError(util.APIErrorNotFound, fmt.Sprintf("device %q channel %q not found", id, channel), w, r)
+	}
+}
+
 type DevicePosition struct {
 	ID        string
 	GpsTime   time.Time //gps时间
