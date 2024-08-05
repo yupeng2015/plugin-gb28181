@@ -338,7 +338,7 @@ func (channel *Channel) Invite(opt *InviteOptions) (code int, err error) {
 		}
 		defer func() {
 			if err != nil {
-				GB28181Plugin.Error("Invite", zap.Error(err))
+				GB28181Plugin.Error("InviteRetryInit", zap.Error(err))
 				channel.State.Store(0)
 				if conf.InviteMode == 1 {
 					// 5秒后重试
@@ -351,6 +351,7 @@ func (channel *Channel) Invite(opt *InviteOptions) (code int, err error) {
 			}
 		}()
 	}
+
 	d := channel.Device
 	streamPath := fmt.Sprintf("%s/%s", d.ID, channel.DeviceID)
 	s := "Play"
@@ -424,7 +425,10 @@ func (channel *Channel) Invite(opt *InviteOptions) (code int, err error) {
 	invite.AppendHeader(&subject)
 	inviteRes, err := d.SipRequestForResponse(invite)
 	if err != nil {
-		channel.Error("invite", zap.Error(err), zap.String("msg", invite.String()))
+		if opt.recyclePort != nil {
+			opt.recyclePort(opt.MediaPort)
+		}
+		channel.Error("inviteRequestError", zap.Error(err), zap.String("msg", invite.String()))
 		return http.StatusInternalServerError, err
 	}
 	code = int(inviteRes.StatusCode())
@@ -455,27 +459,29 @@ func (channel *Channel) Invite(opt *InviteOptions) (code int, err error) {
 		}
 		var psPuber ps.PSPublisher
 		err = psPuber.Receive(streamPath, opt.dump, fmt.Sprintf("%s:%d", networkType, opt.MediaPort), opt.SSRC, reusePort)
-		if err == nil {
-			if !opt.IsLive() {
-				// 10秒无数据关闭
-				if psPuber.Stream.DelayCloseTimeout == 0 {
-					psPuber.Stream.DelayCloseTimeout = time.Second * 10
-				}
-				if psPuber.Stream.IdleTimeout == 0 {
-					psPuber.Stream.IdleTimeout = time.Second * 10
-				}
-			}
-			PullStreams.Store(streamPath, &PullStream{
-				opt:       opt,
-				channel:   channel,
-				inviteRes: inviteRes,
-			})
-			err = srv.Send(sip.NewAckRequest("", invite, inviteRes, "", nil))
-		} else {
+		if err != nil {
 			if opt.recyclePort != nil {
 				opt.recyclePort(opt.MediaPort)
 			}
+			channel.Error("inviteTcpCreateError", zap.Error(err))
+			return http.StatusInternalServerError, err
 		}
+
+		if !opt.IsLive() {
+			// 10秒无数据关闭
+			if psPuber.Stream.DelayCloseTimeout == 0 {
+				psPuber.Stream.DelayCloseTimeout = time.Second * 10
+			}
+			if psPuber.Stream.IdleTimeout == 0 {
+				psPuber.Stream.IdleTimeout = time.Second * 10
+			}
+		}
+		PullStreams.Store(streamPath, &PullStream{
+			opt:       opt,
+			channel:   channel,
+			inviteRes: inviteRes,
+		})
+		err = srv.Send(sip.NewAckRequest("", invite, inviteRes, "", nil))
 	} else {
 		if opt.recyclePort != nil {
 			opt.recyclePort(opt.MediaPort)
