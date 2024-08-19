@@ -3,7 +3,7 @@ module m7s.live/plugin/gb28181/v4
 go 1.19
 
 require (
-	github.com/ghettovoice/gosip v0.0.0-20230903092020-b059959586db
+	github.com/ghettovoice/gosip v0.0.0-20231227123312-6b80e2d3e6f7
 	github.com/goccy/go-json v0.10.2
 	github.com/husanpao/ip v0.0.0-20220711082147-73160bb611a8
 	github.com/logrusorgru/aurora/v4 v4.0.0
