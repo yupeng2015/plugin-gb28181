@@ -449,11 +449,11 @@ func (channel *Channel) Invite(opt *InviteOptions) (code int, err error) {
 		fmt.Sprintf("m=video %d %sRTP/AVP 96", opt.MediaPort, protocol),
 		"a=recvonly",
 		"a=rtpmap:96 PS/90000",
-		"y=" + opt.ssrc,
 	}
 	if conf.IsMediaNetworkTCP() {
 		sdpInfo = append(sdpInfo, "a=setup:passive", "a=connection:new")
 	}
+	sdpInfo = append(sdpInfo, "y="+opt.ssrc)
 	invite := channel.CreateRequst(sip.INVITE)
 	contentType := sip.ContentType("application/sdp")
 	invite.AppendHeader(&contentType)
